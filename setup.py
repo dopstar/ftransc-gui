@@ -38,7 +38,7 @@ setup_args = {
     ],
     'entry_points': {
         'console_scripts': [
-            'ftransc-gui=ftransc.launcher:gui',
+            'ftransc-gui=ftransc_gui.launcher:gui',
         ]
     }
 }

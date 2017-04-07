@@ -22,6 +22,6 @@ def gui():
     if os.environ['USER'] == 'root':
         raise SystemExit('It is not safe to run ftransc as root.')
 
-    app = ftransc.gui.App(sys.argv)
+    app = ftransc_gui.gui.App(sys.argv)
     ftransc_gui.gui.Window().show()
     sys.exit(app.exec_())
