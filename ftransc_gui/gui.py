@@ -73,9 +73,8 @@ class Window(QtWidgets.QDialog):
         body_layout.addLayout(foot_layout)
 
         self.setLayout(body_layout)
-        self.setWindowTitle("ftransc Audio Converter v%s" % ftransc.__version__)
+        self.setWindowTitle("ftransc gui v%s" % ftransc_gui.__version__)
         self.resize(700, 400)
-
 
         cancel_button.clicked.connect(self.close)
 

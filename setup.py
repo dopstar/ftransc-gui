@@ -1,9 +1,11 @@
 from setuptools import setup
 
-version = '1.0.0'
+version = '1.0.1'
 
 requirements = [
     'ftransc==6.0.10',
+    'PyQt5',
+    'nose',
 ]
 
 

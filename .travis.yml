@@ -8,6 +8,8 @@ env:
 install:
   - pip install -U pip
   - pip install -i $PYPI .
+script:
+  - nosetests --stop --verbose tests
 deploy:
   provider: pypi
   user: dopstar
