@@ -7,7 +7,7 @@ env:
     - FOO="BAR"
 install:
   - pip install -U pip
-  - pip install -i $PYPI .
+  - pip install .
 script:
   - nosetests --stop --verbose tests
 deploy:
