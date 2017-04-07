@@ -13,7 +13,7 @@ class FtranscGuiTestCase(unittest.TestCase):
 
         window_methods = [
             'convert',
-            'browser',
+            'browse',
             'add_files',
             'createFilesTable',
             'createButton',
