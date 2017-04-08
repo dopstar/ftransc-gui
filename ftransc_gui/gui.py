@@ -3,6 +3,7 @@ import logging
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 import ftransc
+import ftransc_gui
 import ftransc.utils
 import ftransc.metadata
 import ftransc.core.transcoders
