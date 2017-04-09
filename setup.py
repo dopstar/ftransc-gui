@@ -1,6 +1,6 @@
 from setuptools import setup
 
-version = '1.0.3'
+version = '1.0.4'
 
 requirements = [
     'ftransc==6.0.10',
@@ -31,7 +31,7 @@ setup_args = {
     ],
     'package_data': {'ftransc_gui': ['*.md']},
     'install_requires': requirements,
-    'keywords': 'ftransc, gui, audio, convert, ffmpeg, avconv, mp3, wma, ogg, flac, transcode',
+    'keywords': 'ftransc, gui, audio, convert, ffmpeg, avconv, mp3, wma, ogg, flac, transcode, qt',
     'classifiers': [
         'Development Status :: {0}'.format(dev_status),
         'Intended Audience :: End Users/Desktop',

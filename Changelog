@@ -1,4 +1,8 @@
-ftransc-gui 1.0.0 (07 April 2017):
+ftransc-gui 1.0.4 (10 Apr 2017):
+    + Adding release code names and displaying coded releases.
+    + Moved output folder display to the bottom
+    + Added the genre column to the gui
+ftransc-gui 1.0.0 (07 Apr 2017):
     + Reinstated Ftransc GUI and split it out from ftransc to an independent project with initial dependency on ftransc 6.0.10.
     + All the previous changes on this changelog are kept intact anyway.
 ftransc 6.0.9 (07 April 2017):

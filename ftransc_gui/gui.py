@@ -3,7 +3,7 @@ import logging
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 import ftransc
-import ftransc_gui
+import ftransc_gui.utils
 import ftransc.utils
 import ftransc.metadata
 import ftransc.core.transcoders
@@ -15,6 +15,12 @@ logger = logging.getLogger(__name__)
 class Window(QtWidgets.QDialog):
     def __init__(self, parent=None, cmdlinefiles=None):
         super(Window, self).__init__(parent)
+
+        self.filename_column_index = 0
+        self.title_column_index = 1
+        self.artist_column_index = 2
+        self.genre_column_index = 3
+        self.status_column_index = 4
 
         add_files_button = self.createButton("&Add Files", self.add_files)
         convert_button = self.createButton("Conv&ert", self.convert)
@@ -37,13 +43,15 @@ class Window(QtWidgets.QDialog):
         head_layout.addWidget(browse_button)
         head_layout.addSpacing(500)
 
-        browse_layout.addWidget(self.foldername)
+        # browse_layout.addWidget(self.foldername)
 
         codec_label = QtWidgets.QLabel("Convert To:")
         self.codec_combobox = QtWidgets.QComboBox()
         formats = ftransc.utils.get_audio_formats()
-        for fmt in formats:
+        for idx, fmt in enumerate(formats):
             self.codec_combobox.addItem(fmt)
+            if fmt == 'mp3':
+                self.codec_combobox.setCurrentIndex(idx)
 
         quality_label = QtWidgets.QLabel("Quality:")
         self.quality_combobox = QtWidgets.QComboBox()
@@ -62,19 +70,21 @@ class Window(QtWidgets.QDialog):
         foot_layout.addWidget(self.delete_original_checkbox)
         foot_layout.addWidget(self.overwrite_checkbox)
         foot_layout.addWidget(self.unlock_checkbox)
-        foot_layout.addSpacing(500)
+        foot_layout.addSpacing(50)
+        foot_layout.addWidget(self.foldername)
+        foot_layout.addSpacing(100)
         foot_layout.addWidget(convert_button)
         foot_layout.addWidget(cancel_button)
 
         self.createFilesTable()
 
         body_layout.addLayout(head_layout)
-        body_layout.addLayout(browse_layout)
+        # body_layout.addLayout(browse_layout)
         body_layout.addWidget(self.filesTable)
         body_layout.addLayout(foot_layout)
 
         self.setLayout(body_layout)
-        self.setWindowTitle("ftransc gui v%s" % ftransc_gui.__version__)
+        self.setWindowTitle("ftransc gui {0}".format(ftransc_gui.utils.get_display_version()))
         self.resize(700, 400)
 
         cancel_button.clicked.connect(self.close)
@@ -92,19 +102,20 @@ class Window(QtWidgets.QDialog):
             filt += ";;Audio Files (*.mp3 *.wma *.aac *.mp4 *.m4a *.flac *.ogg"
             filt += " *.mpc *.mka *.mp+ *.ape *.wv *.wav *.aiff)"
             filt += ";;Video Files (*.avi *.flv *.mpg *.mpeg *.vob *.divx *.mkv *.mp4)"
-            files = QtWidgets.QFileDialog.getOpenFileNames(self,
+            files, chosen_filter = QtWidgets.QFileDialog.getOpenFileNames(self,
                                                        'Add files to convert',
                                                        QtCore.QDir.currentPath(),
                                                        filt)
 
-        for i in files[0]:
+        for i in files:
             tags = {k: v if v is not None else '' for k, v in ftransc.metadata.Metadata(i).input_tags.items()}
             row = self.filesTable.rowCount()
             self.filesTable.insertRow(row)
-            self.filesTable.setItem(row, 3, QtWidgets.QTableWidgetItem('Scheduled'))
-            self.filesTable.setItem(row, 2, QtWidgets.QTableWidgetItem(tags['artist']))
-            self.filesTable.setItem(row, 1, QtWidgets.QTableWidgetItem(tags['title']))
-            self.filesTable.setItem(row, 0, QtWidgets.QTableWidgetItem(i))
+            self.filesTable.setItem(row, self.status_column_index, QtWidgets.QTableWidgetItem('Scheduled'))
+            self.filesTable.setItem(row, self.genre_column_index, QtWidgets.QTableWidgetItem(tags['genre']))
+            self.filesTable.setItem(row, self.artist_column_index, QtWidgets.QTableWidgetItem(tags['artist']))
+            self.filesTable.setItem(row, self.title_column_index, QtWidgets.QTableWidgetItem(tags['title']))
+            self.filesTable.setItem(row, self.filename_column_index, QtWidgets.QTableWidgetItem(i))
 
     def browse(self):
         folder = QtWidgets.QFileDialog.getExistingDirectory(self,
@@ -117,14 +128,14 @@ class Window(QtWidgets.QDialog):
         row_count = self.filesTable.rowCount()
         audio_format = str(self.codec_combobox.currentText()).lower()
         audio_quality = str(self.quality_combobox.currentText()).lower()
-        for row in range(row_count):
+        for row_number in range(row_count):
             status = QtWidgets.QTableWidgetItem('Scheduled')
-            self.filesTable.setItem(0, 3, status)
+            self.filesTable.setItem(row_number, self.status_column_index, status)
             self.filesTable.repaint()
-        for row in range(row_count):
-            filename = self.filesTable.item(0, 0).text()
+        for row_number in range(row_count):
+            filename = self.filesTable.item(row_number, self.filename_column_index).text()
             status = QtWidgets.QTableWidgetItem('Converting...')
-            self.filesTable.setItem(0, 3, status)
+            self.filesTable.setItem(row_number, self.status_column_index, status)
             self.filesTable.repaint()
             self.filesTable.repaint()
 
@@ -136,6 +147,12 @@ class Window(QtWidgets.QDialog):
 
             if not self.overwrite_checkbox.isChecked() and os.path.exists(output_filename):
                 logger.info("Skipping %s. File exists. Overwrite mode not enabled.", filename)
+                self.filesTable.repaint()
+                self.filesTable.repaint()
+                status = QtWidgets.QTableWidgetItem('Skipped')
+                self.filesTable.setItem(row_number, self.status_column_index, status)
+                self.filesTable.repaint()
+                self.filesTable.repaint()
                 continue
 
             swp_file = ".%s.swp" % filename
@@ -144,6 +161,12 @@ class Window(QtWidgets.QDialog):
                     os.remove(swp_file)
                 else:
                     logger.info("Skipping %s. File locked. Unlock mode not enabled.", filename)
+                    self.filesTable.repaint()
+                    self.filesTable.repaint()
+                    status = QtWidgets.QTableWidgetItem('Skipped')
+                    self.filesTable.setItem(row_number, self.status_column_index, status)
+                    self.filesTable.repaint()
+                    self.filesTable.repaint()
                     continue
 
             audio_preset = ftransc.utils.get_audio_presets(audio_format=audio_format, audio_quality=audio_quality)
@@ -156,6 +179,12 @@ class Window(QtWidgets.QDialog):
             )
             if not is_success:
                 logger.error("Failed converting %s", filename)
+                self.filesTable.repaint()
+                self.filesTable.repaint()
+                status = QtWidgets.QTableWidgetItem('Failed')
+                self.filesTable.setItem(row_number, self.status_column_index, status)
+                self.filesTable.repaint()
+                self.filesTable.repaint()
                 continue
             try:
                 metadata.insert_tags(output_filename)
@@ -167,16 +196,20 @@ class Window(QtWidgets.QDialog):
                 os.remove(filename)
 
             self.filesTable.repaint()
-            self.filesTable.removeRow(0)
+            self.filesTable.repaint()
+            status = QtWidgets.QTableWidgetItem('Success')
+            self.filesTable.setItem(row_number, self.status_column_index, status)
+            self.filesTable.repaint()
             self.filesTable.repaint()
 
     def createFilesTable(self):
-        self.filesTable = QtWidgets.QTableWidget(0, 4)
+        self.filesTable = QtWidgets.QTableWidget(0, 5)
         self.filesTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.filesTable.setHorizontalHeaderLabels(["Filename", "Title", "Artist", "Status"])
-        self.filesTable.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        self.filesTable.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        self.filesTable.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        self.filesTable.setHorizontalHeaderLabels(["Filename", "Title", "Artist", "Genre", "Status"])
+        self.filesTable.horizontalHeader().setSectionResizeMode(self.filename_column_index, QtWidgets.QHeaderView.Stretch)
+        self.filesTable.horizontalHeader().setSectionResizeMode(self.title_column_index, QtWidgets.QHeaderView.Stretch)
+        self.filesTable.horizontalHeader().setSectionResizeMode(self.artist_column_index, QtWidgets.QHeaderView.Stretch)
+        self.filesTable.horizontalHeader().setSectionResizeMode(self.genre_column_index, QtWidgets.QHeaderView.Stretch)
         self.filesTable.verticalHeader().hide()
         self.filesTable.setShowGrid(True)
         self.filesTable.setAlternatingRowColors(True)
